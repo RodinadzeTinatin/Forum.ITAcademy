@@ -23,14 +23,14 @@ namespace Forum.Data
                 .HasOne(c => c.Topic)
                 .WithMany(c => c.Comments)
                 .HasForeignKey(c => c.TopicId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.NoAction);
 
 
             modelBuilder.Entity<Comment>()
                 .HasOne(c => c.ApplicationUser)
                 .WithMany (c => c.Comments)
                 .HasForeignKey(c => c.UserId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.Cascade);
                 
 
             modelBuilder.SeedRoles();

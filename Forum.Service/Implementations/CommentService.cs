@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.JsonPatch;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
@@ -19,13 +20,15 @@ namespace Forum.Service.Implementations
     public class CommentService : ICommentService
     {
         private readonly ICommentRepository _commentRepository;
+        private readonly ITopicRepository _topicRepository;
         private readonly IMapper _mapper;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public CommentService(ICommentRepository commentRepository, IMapper mapper, IHttpContextAccessor httpContextAccessor, UserManager<ApplicationUser> userManager)
+        public CommentService(ICommentRepository commentRepository,ITopicRepository topicRepository, IMapper mapper, IHttpContextAccessor httpContextAccessor, UserManager<ApplicationUser> userManager)
         {
             _commentRepository = commentRepository;
+            _topicRepository = topicRepository;
             _mapper = MappingInitializer.Initialize();
             _userManager = userManager;
             _httpContextAccessor = httpContextAccessor;
@@ -37,12 +40,25 @@ namespace Forum.Service.Implementations
             if (commentForCreatingDto is null)
                 throw new ArgumentNullException("Invalid argument passed");
 
-            if (commentForCreatingDto.UserId != AuthenticatedUserId())
-                throw new UnauthorizedAccessException("Can't add another users topic");
+            var topic = await _topicRepository.GetSingleTopicAsync(t => t.Id == commentForCreatingDto.TopicId);
 
-            var result = _mapper.Map<Comment>(commentForCreatingDto);
-            await _commentRepository.AddCommentAsync(result);
-            await _commentRepository.Save();
+            if (topic == null || topic.Status == Status.Inactive)
+            {
+                throw new InvalidOperationException("Cannot add a comment to an inactive or non-existent topic");
+            }
+
+            if (commentForCreatingDto.UserId == AuthenticatedUserId().Trim()|| AuthenticatedUserRole() == "Admin")
+            {
+                var result = _mapper.Map<Comment>(commentForCreatingDto);
+                await _commentRepository.AddCommentAsync(result);
+                await _commentRepository.Save();
+
+            }
+            else
+            {
+                throw new UnauthorizedAccessException("Can't add another users comments");
+            }
+
         }
 
         public async Task DeleteCommentAsync(int id)
@@ -53,9 +69,9 @@ namespace Forum.Service.Implementations
             var rawTodo = await _commentRepository.GetSingleCommentAsync(x => x.Id == id);
 
             if (rawTodo == null)
-                throw new TopicNotFoundException();
+                throw new CommentNotFoundException();
 
-            if (rawTodo.UserId == AuthenticatedUserId().Trim())
+            if (rawTodo.UserId == AuthenticatedUserId().Trim() || AuthenticatedUserRole() == "Admin")
             {
                 _commentRepository.DeleteComment(rawTodo);
                 await _commentRepository.Save();
@@ -71,8 +87,6 @@ namespace Forum.Service.Implementations
             if (string.IsNullOrWhiteSpace(userId))
                 throw new ArgumentException("Invalid argument passed");
 
-            //if (AuthenticatedUserId().Trim() != userId.Trim())
-            //    throw new UserNotFoundExcpetion();
 
             var user = await _userManager.FindByIdAsync(userId);
             if (user == null)
@@ -100,7 +114,6 @@ namespace Forum.Service.Implementations
             throw new NotImplementedException();
         }
 
-
         public async Task UpdateCommentAsync(int commentcId, JsonPatchDocument<CommentForUpdatingDto> patchDocument)
         {
             if (commentcId <= 0)
@@ -109,14 +122,22 @@ namespace Forum.Service.Implementations
             Comment rawTodo = await _commentRepository.GetSingleCommentAsync(x => x.Id == commentcId);
 
             if (rawTodo == null)
-                throw new TopicNotFoundException();
+                throw new CommentNotFoundException();
 
-            CommentForUpdatingDto commentToPatch = _mapper.Map<CommentForUpdatingDto>(rawTodo);
+            if (AuthenticatedUserId().Trim() == rawTodo.UserId || AuthenticatedUserRole() == "Admin")
+            {
+                CommentForUpdatingDto commentToPatch = _mapper.Map<CommentForUpdatingDto>(rawTodo);
 
-            patchDocument.ApplyTo(commentToPatch);
-            _mapper.Map(commentToPatch, rawTodo);
+                patchDocument.ApplyTo(commentToPatch);
+                _mapper.Map(commentToPatch, rawTodo);
 
-            await _commentRepository.Save();
+                await _commentRepository.Save();
+            }
+            else
+            {
+                throw new UnauthorizedAccessException("Can't delete other user's comment");
+            }
+
         }
 
         private string AuthenticatedUserId()
@@ -124,6 +145,18 @@ namespace Forum.Service.Implementations
             if (_httpContextAccessor.HttpContext.User.Identity.IsAuthenticated)
             {
                 var result = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+                return result;
+            }
+            else
+            {
+                throw new UnauthorizedAccessException("Can't get credentials of unauthorized user");
+            }
+        }
+        private string AuthenticatedUserRole()
+        {
+            if (_httpContextAccessor.HttpContext.User.Identity.IsAuthenticated)
+            {
+                var result = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.Role);
                 return result;
             }
             else

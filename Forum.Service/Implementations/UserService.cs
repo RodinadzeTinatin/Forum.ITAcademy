@@ -16,7 +16,7 @@ using System.Threading.Tasks;
 
 namespace Forum.Service.Implementations
 {
-    public class AuthService : IAuthService
+    public class UserService : IUserService
     {
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
@@ -27,7 +27,7 @@ namespace Forum.Service.Implementations
         private const string _adminRole = "Admin";
         private const string _customerRole = "Customer";
 
-        public AuthService(ApplicationDbContext context, UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager, IJwtGenerator jwtTokenGenerator, IHttpContextAccessor httpContextAccessor)
+        public UserService(ApplicationDbContext context, UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager, IJwtGenerator jwtTokenGenerator, IHttpContextAccessor httpContextAccessor)
         {
             _context = context;
             _userManager = userManager;
@@ -40,6 +40,12 @@ namespace Forum.Service.Implementations
         public async Task<LoginResponseDto> Login(LoginRequestDto loginRequestDto)
         {
             var user = await _context.Users.FirstOrDefaultAsync(x => x.UserName.ToLower() == loginRequestDto.UserName);
+            
+            if (await _userManager.IsLockedOutAsync(user))
+            {
+                throw new LockedOutException();
+            }
+
             bool isValid = await _userManager.CheckPasswordAsync(user, loginRequestDto.Password);
 
             if (user == null || isValid == false)
@@ -167,7 +173,6 @@ namespace Forum.Service.Implementations
             }
         }
 
-
         public string GetAuthenticatedUserId()
         {
             if (_httpContextAccessor.HttpContext.User.Identity.IsAuthenticated)
@@ -190,5 +195,63 @@ namespace Forum.Service.Implementations
                 throw new UnauthorizedAccessException("Can't get credentials of unauthorzied user");
             }
         }
+
+        public async Task<UserDto> GetUserByEmail(string userEmail)
+        {
+            var user = await _userManager.FindByEmailAsync(userEmail);
+            if (user == null)
+                throw new UserNotFoundExcpetion();
+            return _mapper.Map<UserDto>(user);
+
+        }
+
+
+        public async Task LockOutUser (string userId)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+
+            if (user == null)
+            {
+                throw new UserNotFoundExcpetion();
+            }
+
+            if (GetAuthenticatedUserRole() == "Admin")
+            {
+                var lockoutEndDate = DateTimeOffset.MaxValue;
+                await _userManager.SetLockoutEndDateAsync(user, lockoutEndDate);
+            }
+            else
+            {
+                throw new UnauthorizedAccessException("User is not authorized to perform this action.");
+            }
+
+        }
+
+        public async Task CancelLockOut(string userId)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+
+            if (user == null)
+            {
+                throw new UserNotFoundExcpetion();
+            }
+
+            var isLockedOut = await _userManager.IsLockedOutAsync(user);
+
+            if (!isLockedOut)
+            {
+                throw new LockOutNotSetException();
+            }
+
+            if (GetAuthenticatedUserRole() == "Admin"  )
+            {
+                await _userManager.SetLockoutEndDateAsync(user, null);
+            }
+            else
+            {
+                throw new UnauthorizedAccessException("User is not authorized to perform this action.");
+            }
+        }
+
     }
 }

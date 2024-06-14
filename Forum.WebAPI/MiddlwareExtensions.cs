@@ -75,7 +75,7 @@ namespace Forum.WebAPI
             builder.Services.AddScoped<ICommentRepository, CommentRepository>();
             builder.Services.AddScoped<ICommentService, CommentService>();
 
-            builder.Services.AddScoped<IAuthService, AuthService>();
+            builder.Services.AddScoped<IUserService, UserService>();
             builder.Services.AddScoped<IJwtGenerator, JwtTokenGenerator>();
         }
 

@@ -26,29 +26,11 @@ namespace Forum.WebAPI.Controllers
         [HttpGet("all")]
         public async Task<IActionResult> GetAllTopics()
         {
-            try
-            {
-                var result = await _topicService.GetAllTopics();
-                _response.IsSuccess = true;
-                _response.Result = result;
-                _response.StatusCode = Convert.ToInt32(HttpStatusCode.OK);
-                _response.Message = "Request completed successfully";
-            }
-            catch (TopicNotFoundException ex)
-            {
-                _response.IsSuccess = false;
-                _response.Result = null;
-                _response.StatusCode = Convert.ToInt32(HttpStatusCode.NotFound);
-                _response.Message = ex.Message;
-            }
-            catch (Exception ex)
-            {
-                _response.IsSuccess = false;
-                _response.Result = null;
-                _response.StatusCode = Convert.ToInt32(HttpStatusCode.InternalServerError);
-                _response.Message = ex.Message;
-            }
-
+            var result = await _topicService.GetAllTopics();
+            _response.IsSuccess = true;
+            _response.Result = result;
+            _response.StatusCode = Convert.ToInt32(HttpStatusCode.OK);
+            _response.Message = "Request completed successfully";
             return StatusCode(_response.StatusCode, _response);
 
         }
@@ -57,81 +39,40 @@ namespace Forum.WebAPI.Controllers
         [Authorize]
         public async Task<IActionResult> GetTopicsOfUser(string userId)
         {
-            try
-            {
-                var result = await _topicService.GetTopicsOfUserAsync(userId);
-                _response.IsSuccess = true;
-                _response.Result = result;
-                _response.StatusCode = Convert.ToInt32(HttpStatusCode.OK);
-                _response.Message = "Request completed successfully";
-            }
-            catch (ArgumentException ex)
-            {
-                _response.IsSuccess = false;
-                _response.Result = null;
-                _response.StatusCode = Convert.ToInt32(HttpStatusCode.BadRequest);
-                _response.Message = ex.Message;
-            }
-            catch (TopicNotFoundException ex)
-            {
-                _response.IsSuccess = false;
-                _response.Result = null;
-                _response.StatusCode = Convert.ToInt32(HttpStatusCode.NotFound);
-                _response.Message = ex.Message;
-            }
-            catch (Exception ex)
-            {
-                _response.IsSuccess = false;
-                _response.Result = null;
-                _response.StatusCode = Convert.ToInt32(HttpStatusCode.InternalServerError);
-                _response.Message = ex.Message;
-            }
-
+            
+            var result = await _topicService.GetTopicsOfUserAsync(userId);
+            _response.IsSuccess = true;
+            _response.Result = result;
+            _response.StatusCode = Convert.ToInt32(HttpStatusCode.OK);
+            _response.Message = "Request completed successfully";
+        
             return StatusCode(_response.StatusCode, _response);
         }
 
+        [HttpGet("{topicId}")]
+        [Authorize]
+        public async Task<IActionResult> GetTopicById(int topicId)
+        {
+            var result = await _topicService.GetTopicsById(topicId);
+            _response.IsSuccess = true;
+            _response.Result = result;
+            _response.StatusCode = Convert.ToInt32(HttpStatusCode.OK);
+            _response.Message = "Request completed successfully";
+
+            return StatusCode(_response.StatusCode, _response);
+
+        }
 
         [HttpGet("{topicId}/comments")]
         //[Authorize]
         public async Task<IActionResult> GetCommentsOfTopic(int topicId)
         {
-            try
-            {
-                var result = await _topicService.GetCommentsOfTopicAsync(topicId);
-                _response.IsSuccess = true;
-                _response.Result = result;
-                _response.StatusCode = Convert.ToInt32(HttpStatusCode.OK);
-                _response.Message = "Request completed successfully";
-            }
-            catch (ArgumentException ex)
-            {
-                _response.IsSuccess = false;
-                _response.Result = null;
-                _response.StatusCode = Convert.ToInt32(HttpStatusCode.BadRequest);
-                _response.Message = ex.Message;
-            }
-            catch (TopicNotFoundException ex)
-            {
-                _response.IsSuccess = false;
-                _response.Result = null;
-                _response.StatusCode = Convert.ToInt32(HttpStatusCode.NotFound);
-                _response.Message = ex.Message;
-            }
-            catch (CommentNotFoundException ex)
-            {
-                _response.IsSuccess = false;
-                _response.Result = null;
-                _response.StatusCode = Convert.ToInt32(HttpStatusCode.NotFound);
-                _response.Message = ex.Message;
-            }
-            catch (Exception ex)
-            {
-                _response.IsSuccess = false;
-                _response.Result = null;
-                _response.StatusCode = Convert.ToInt32(HttpStatusCode.InternalServerError);
-                _response.Message = ex.Message;
-            }
-
+            var result = await _topicService.GetCommentsOfTopicAsync(topicId);
+            _response.IsSuccess = true;
+            _response.Result = result;
+            _response.StatusCode = Convert.ToInt32(HttpStatusCode.OK);
+            _response.Message = "Request completed successfully";
+           
             return StatusCode(_response.StatusCode, _response);
         }
 
@@ -139,37 +80,13 @@ namespace Forum.WebAPI.Controllers
         [Authorize]
         public async Task<IActionResult> AddTopicToUser([FromForm] TopicForCreatingDto model)
         {
-            try
-            {
-                await _topicService.AddTopicAsync(model);
-                _response.IsSuccess = true;
-                _response.Result = model;
-                _response.StatusCode = Convert.ToInt32(HttpStatusCode.OK);
-                _response.Message = "Topic added to user successfully";
-            }
-            catch (ArgumentNullException ex)
-            {
-                _response.IsSuccess = false;
-                _response.Result = null;
-                _response.StatusCode = Convert.ToInt32(HttpStatusCode.BadRequest);
-                _response.Message = ex.Message;
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                _response.IsSuccess = false;
-                _response.Result = null;
-                _response.StatusCode = Convert.ToInt32(HttpStatusCode.Unauthorized);
-                _response.Message = ex.Message;
-            }
-            catch (Exception ex)
-            {
-                _response.IsSuccess = false;
-                _response.Result = null;
-                _response.StatusCode = Convert.ToInt32(HttpStatusCode.InternalServerError);
-                _response.Message = ex.Message;
-            }
-            return StatusCode(_response.StatusCode, _response);
+            await _topicService.AddTopicAsync(model);
+            _response.IsSuccess = true;
+            _response.Result = model;
+            _response.StatusCode = Convert.ToInt32(HttpStatusCode.OK);
+            _response.Message = "Topic added to user successfully";
 
+            return StatusCode(_response.StatusCode, _response);
         }
 
         [HttpDelete("delete/{id}")]
@@ -177,87 +94,28 @@ namespace Forum.WebAPI.Controllers
 
         public async Task<IActionResult> DeleteUsersTodo(int id)
         {
-            try
-            {
-                await _topicService.DeleteTopicAsync(id);
-                _response.IsSuccess = true;
-                _response.Result = null;
-                _response.StatusCode = Convert.ToInt32(HttpStatusCode.OK);
-                _response.Message = "Todo deleted successfully";
-            }
-            catch (ArgumentNullException ex)
-            {
-                _response.IsSuccess = false;
-                _response.Result = null;
-                _response.StatusCode = Convert.ToInt32(HttpStatusCode.BadRequest);
-                _response.Message = ex.Message;
-            }
-            catch (TopicNotFoundException ex)
-            {
-                _response.IsSuccess = false;
-                _response.Result = null;
-                _response.StatusCode = Convert.ToInt32(HttpStatusCode.NotFound);
-                _response.Message = ex.Message;
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                _response.IsSuccess = false;
-                _response.Result = null;
-                _response.StatusCode = Convert.ToInt32(HttpStatusCode.Unauthorized);
-                _response.Message = ex.Message;
-            }
-            catch (Exception ex)
-            {
-                _response.IsSuccess = false;
-                _response.Result = null;
-                _response.StatusCode = Convert.ToInt32(HttpStatusCode.InternalServerError);
-                _response.Message = ex.Message;
-            }
+           
+            await _topicService.DeleteTopicAsync(id);
+            _response.IsSuccess = true;
+            _response.Result = null;
+            _response.StatusCode = Convert.ToInt32(HttpStatusCode.OK);
+            _response.Message = "Todo deleted successfully";
+            
             return StatusCode(_response.StatusCode, _response);
         }
 
-        [HttpPatch("{topicId:int}")]
+        [HttpPatch("patch/{topicId:int}")]
         [Authorize]
 
         public async Task<IActionResult> UpdateTodo([FromRoute] int topicId, [FromBody] JsonPatchDocument<TopicForUpdatingDto> patchDocument)
         {
-            try
-            {
-                await _topicService.UpdateTopicAsync(topicId, patchDocument);
+           await _topicService.UpdateTopicAsync(topicId, patchDocument);
 
-                _response.Result = patchDocument;
-                _response.IsSuccess = true;
-                _response.StatusCode = Convert.ToInt32(HttpStatusCode.OK);
-                _response.Message = "Todo updated successfully";
-            }
-            catch (ArgumentNullException ex)
-            {
-                _response.IsSuccess = false;
-                _response.Result = null;
-                _response.StatusCode = Convert.ToInt32(HttpStatusCode.BadRequest);
-                _response.Message = ex.Message;
-            }
-            catch (TopicNotFoundException ex)
-            {
-                _response.IsSuccess = false;
-                _response.Result = null;
-                _response.StatusCode = Convert.ToInt32(HttpStatusCode.NotFound);
-                _response.Message = ex.Message;
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                _response.IsSuccess = false;
-                _response.Result = null;
-                _response.StatusCode = Convert.ToInt32(HttpStatusCode.Unauthorized);
-                _response.Message = ex.Message;
-            }
-            catch (Exception ex)
-            {
-                _response.IsSuccess = false;
-                _response.Result = null;
-                _response.StatusCode = Convert.ToInt32(HttpStatusCode.InternalServerError);
-                _response.Message = ex.Message;
-            }
+            _response.Result = patchDocument;
+            _response.IsSuccess = true;
+            _response.StatusCode = Convert.ToInt32(HttpStatusCode.OK);
+            _response.Message = "Todo updated successfully";
+            
             return StatusCode(_response.StatusCode, _response);
         }
     }

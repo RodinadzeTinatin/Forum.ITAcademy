@@ -24,7 +24,7 @@ namespace Forum.WebAPI
             var app = builder.Build();
             app.UseSwagger();
             app.UseSwaggerUI();
-            //app.UseMiddleware<CustomExceptionHandlerMiddleware>();
+            app.UseMiddleware<CustomExceptionHandlerMiddleware>();
             app.UseHttpsRedirection();
             app.UseCors(builder.Configuration.GetValue<string>("Cors:AllowOrigin"));
             app.UseAuthentication();

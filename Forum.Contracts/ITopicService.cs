@@ -11,6 +11,7 @@ namespace Forum.Contracts
     public interface ITopicService
     {
         Task<List<TopicForGettingDto>> GetAllTopics();
+        Task<TopicForGettingDto> GetTopicsById(int id);
         Task<List<TopicForGettingDto>> GetTopicsOfUserAsync(string userId);
         //Task<TopicForGettingDto> GetSingleTopicByUserId(int topicId, string userId);
         Task<List<CommentForGettingDto>> GetCommentsOfTopicAsync(int topicId);

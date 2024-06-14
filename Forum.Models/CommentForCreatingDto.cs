@@ -14,10 +14,6 @@ namespace Forum.Models
         public string Content {  get; set; }
 
         [Required]
-        [DataType(DataType.DateTime)]
-        public DateTime CreationDate { get; set; }
-
-        [Required]
         public int TopicId { get; set; }
 
         [Required]

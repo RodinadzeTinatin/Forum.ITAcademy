@@ -7,10 +7,14 @@ using System.Threading.Tasks;
 
 namespace Forum.Contracts
 {
-    public interface IAuthService
+    public interface IUserService
     {
         Task Register(RegistrationRequestDto registrationRequestDto);
         Task RegisterAdmin(RegistrationRequestDto registrationRequestDto);
         Task<LoginResponseDto> Login(LoginRequestDto loginRequestDto);
+
+        Task<UserDto> GetUserByEmail(string userEmail);
+        Task LockOutUser(string userId);
+        Task CancelLockOut(string userId);
     }
 }

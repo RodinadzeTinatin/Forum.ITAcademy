@@ -37,7 +37,7 @@ namespace Forum.Repositories
 
         public async Task<List<Topic>> GetAllTopicsAsync()
         {
-            return await _context.Topics.Include(topic => topic.Comments).ToListAsync();
+            return await _context.Topics.Include(t => t.Comments).ToListAsync();
         }
 
         public async Task<List<Topic>> GetAllTopicsAsync(Expression<Func<Topic, bool>> filter)
@@ -49,6 +49,19 @@ namespace Forum.Repositories
         {
             return await _context.Topics.Include(t => t.Comments).FirstOrDefaultAsync(filter);
 
+        }
+
+        public async Task<List<Topic>> GetTopicsToUpdateAsync()
+        {
+            var fiveDaysAgo = DateTime.UtcNow.AddDays(-5);
+
+
+            var topicsToUpdate = await _context.Topics
+            .Where(t => t.Comments.Any() && t.Comments.OrderByDescending(comment => comment.CreationDate)
+            .FirstOrDefault().CreationDate <= fiveDaysAgo)
+                .ToListAsync();
+
+            return topicsToUpdate;
         }
 
         public async Task Save()

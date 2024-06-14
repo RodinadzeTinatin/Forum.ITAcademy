@@ -18,5 +18,6 @@ namespace Forum.Contracts
         Task UpdateTopicAsync(Topic entity);
         void DeleteTopic(Topic entity);
 
+        Task<List<Topic>> GetTopicsToUpdateAsync();
     }
 }
